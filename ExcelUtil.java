@@ -47,4 +47,22 @@ public class ExcelUtil {
         workbook.write(fos);
         fos.close();
     }
+
+    public static List<User> getUsersWithPasswords() throws IOException {
+    List<User> users = new ArrayList<>();
+    FileInputStream fis = new FileInputStream(FILE_PATH);
+    Workbook wb = new XSSFWorkbook(fis);
+    Sheet sheet = wb.getSheet("Users");
+
+    for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+        Row row = sheet.getRow(i);
+        String userId = row.getCell(0).getStringCellValue();
+        String password = row.getCell(1).getStringCellValue();
+        users.add(new User(userId, password));
+    }
+
+    fis.close();
+    return users;
+}
+
 }
