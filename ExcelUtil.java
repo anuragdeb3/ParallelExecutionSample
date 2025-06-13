@@ -104,5 +104,37 @@ private static String getCellValue(Cell cell) {
     };
 }
 
+    public static Map<String, List<Map<String, String>>> getAssignedRowData(List<String> userIds) throws IOException {
+    Map<String, List<Map<String, String>>> userToRows = new HashMap<>();
+    for (String user : userIds) userToRows.put(user, new ArrayList<>());
+
+    FileInputStream fis = new FileInputStream(FILE_PATH);
+    Workbook workbook = new XSSFWorkbook(fis);
+    Sheet sheet = workbook.getSheet("Accounts");
+
+    Row headerRow = sheet.getRow(0);
+    int totalRows = sheet.getLastRowNum();
+    int totalCols = headerRow.getLastCellNum();
+
+    for (int i = 1; i <= totalRows; i++) {
+        Row row = sheet.getRow(i);
+        if (row == null) continue;
+
+        Map<String, String> rowData = new LinkedHashMap<>();
+        for (int j = 0; j < totalCols; j++) {
+            String key = headerRow.getCell(j).getStringCellValue().trim();
+            String value = getCellValue(row.getCell(j));
+            rowData.put(key, value);
+        }
+
+        rowData.put("__rowIndex", String.valueOf(i)); // helpful for marking edited
+        String assignedUser = userIds.get((i - 1) % userIds.size());
+        userToRows.get(assignedUser).add(rowData);
+    }
+
+    fis.close();
+    return userToRows;
+}
+
 
 }
