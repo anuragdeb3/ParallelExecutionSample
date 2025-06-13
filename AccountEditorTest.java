@@ -9,23 +9,26 @@ import java.util.Map;
 
 public class AccountEditorTest extends BaseTest {
 
-    private static final List<String> USERS = List.of("U001", "U002", "U003", "U004");
-    private String userId;
-    private List<Integer> assignedRows;
+    private final User user;
+    private final List<Integer> assignedRows;
 
     @Factory(dataProvider = "userProvider")
-    public AccountEditorTest(String userId, List<Integer> assignedRows) {
-        this.userId = userId;
+    public AccountEditorTest(User user, List<Integer> assignedRows) {
+        this.user = user;
         this.assignedRows = assignedRows;
     }
 
     @DataProvider(name = "userProvider", parallel = true)
-    public static Object[][] userProvider() throws Exception {
-        Map<String, List<Integer>> userMap = ExcelUtil.getUserAssignments(USERS);
-        Object[][] data = new Object[USERS.size()][2];
-        for (int i = 0; i < USERS.size(); i++) {
-            data[i][0] = USERS.get(i);
-            data[i][1] = userMap.get(USERS.get(i));
+    public static Object[][] userProvider() throws IOException {
+        List<User> users = ExcelUtil.getUsersWithPasswords();
+        Map<String, List<Integer>> assignments = ExcelUtil.getUserAssignments(
+            users.stream().map(u -> u.userId).toList());
+
+        Object[][] data = new Object[users.size()][2];
+        for (int i = 0; i < users.size(); i++) {
+            User user = users.get(i);
+            data[i][0] = user;
+            data[i][1] = assignments.get(user.userId);
         }
         return data;
     }
@@ -33,35 +36,30 @@ public class AccountEditorTest extends BaseTest {
     @Test
     public void testEditAccounts() throws Exception {
         setUp();
-        System.out.println("Logging in: " + userId);
+        login(user.userId, user.password);
 
-        // Simulate Login (Replace with actual Selenium actions)
-        login(userId);
-
-        // Edit 250 rows assigned to the user
         for (int rowIndex : assignedRows.subList(0, Math.min(250, assignedRows.size()))) {
-            // Simulate edit via Selenium
             editAccountInUI(rowIndex);
-            ExcelUtil.markEdited(rowIndex, userId);
+            ExcelUtil.markEdited(rowIndex, user.userId);
         }
 
-        logout(userId);
+        logout();
         tearDown();
     }
 
-    private void login(String userId) {
+    private void login(String userId, String password) {
         driver.get("https://yourapp.com/login");
-        // Selenium steps to log in
+        driver.findElement(By.id("username")).sendKeys(userId);
+        driver.findElement(By.id("password")).sendKeys(password);
+        driver.findElement(By.id("loginButton")).click();
+    }
+
+    private void logout() {
+        driver.findElement(By.id("logoutButton")).click();
     }
 
     private void editAccountInUI(int rowIndex) {
-        // Navigate to account detail page or list view
-        // Perform edits using Selenium
-        System.out.println("[" + userId + "] editing row: " + rowIndex);
-    }
-
-    private void logout(String userId) {
-        // Perform logout
-        System.out.println("[" + userId + "] logged out.");
+        // Dummy implementation
+        System.out.println("User " + user.userId + " editing row " + rowIndex);
     }
 }
