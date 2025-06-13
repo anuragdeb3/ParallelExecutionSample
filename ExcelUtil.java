@@ -65,4 +65,44 @@ public class ExcelUtil {
     return users;
 }
 
+
+
+    public static Map<String, List<Account>> getAssignedAccounts(List<String> userIds) throws IOException {
+    Map<String, List<Account>> assignment = new HashMap<>();
+    for (String user : userIds) {
+        assignment.put(user, new ArrayList<>());
+    }
+
+    FileInputStream fis = new FileInputStream(FILE_PATH);
+    Workbook workbook = new XSSFWorkbook(fis);
+    Sheet sheet = workbook.getSheet("Accounts");
+    int totalRows = sheet.getLastRowNum();
+
+    for (int i = 1; i <= totalRows; i++) {
+        Row row = sheet.getRow(i);
+        if (row == null) continue;
+
+        String accountId = getCellValue(row.getCell(0));
+        String accountName = getCellValue(row.getCell(1));
+        String mandateRef = getCellValue(row.getCell(2)); // Assuming column C = mandate ref
+
+        String assignedUser = userIds.get((i - 1) % userIds.size());
+        assignment.get(assignedUser).add(new Account(accountId, accountName, mandateRef, i));
+    }
+
+    fis.close();
+    return assignment;
+}
+
+private static String getCellValue(Cell cell) {
+    if (cell == null) return "";
+    return switch (cell.getCellType()) {
+        case STRING -> cell.getStringCellValue();
+        case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
+        case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+        default -> "";
+    };
+}
+
+
 }
