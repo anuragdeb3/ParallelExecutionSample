@@ -10,10 +10,10 @@ import java.util.Map;
 public class AccountEditorTest extends BaseTest {
 
     private final User user;
-    private final List<Integer> assignedRows;
+    private final List<Map<String, String>> assignedRows;
 
     @Factory(dataProvider = "userProvider")
-    public AccountEditorTest(User user, List<Integer> assignedRows) {
+    public AccountEditorTest(User user, List<Map<String, String>> assignedRows) {
         this.user = user;
         this.assignedRows = assignedRows;
     }
@@ -21,14 +21,13 @@ public class AccountEditorTest extends BaseTest {
     @DataProvider(name = "userProvider", parallel = true)
     public static Object[][] userProvider() throws IOException {
         List<User> users = ExcelUtil.getUsersWithPasswords();
-        Map<String, List<Integer>> assignments = ExcelUtil.getUserAssignments(
-            users.stream().map(u -> u.userId).toList());
+        Map<String, List<Map<String, String>>> assignment =
+            ExcelUtil.getAssignedRowData(users.stream().map(u -> u.userId).toList());
 
         Object[][] data = new Object[users.size()][2];
         for (int i = 0; i < users.size(); i++) {
-            User user = users.get(i);
-            data[i][0] = user;
-            data[i][1] = assignments.get(user.userId);
+            data[i][0] = users.get(i);
+            data[i][1] = assignment.get(users.get(i).userId);
         }
         return data;
     }
@@ -38,8 +37,9 @@ public class AccountEditorTest extends BaseTest {
         setUp();
         login(user.userId, user.password);
 
-        for (int rowIndex : assignedRows.subList(0, Math.min(250, assignedRows.size()))) {
-            editAccountInUI(rowIndex);
+        for (Map<String, String> rowData : assignedRows.subList(0, Math.min(250, assignedRows.size()))) {
+            editAccountInUI(rowData);
+            int rowIndex = Integer.parseInt(rowData.get("__rowIndex"));
             ExcelUtil.markEdited(rowIndex, user.userId);
         }
 
@@ -58,8 +58,8 @@ public class AccountEditorTest extends BaseTest {
         driver.findElement(By.id("logoutButton")).click();
     }
 
-    private void editAccountInUI(int rowIndex) {
-        // Dummy implementation
-        System.out.println("User " + user.userId + " editing row " + rowIndex);
+    private void editAccountInUI(Map<String, String> row) {
+        System.out.println("[" + user.userId + "] Editing: " + row.get("AccountID") + ", MandateRef=" + row.get("MandateRef"));
+        // Use row.get("ColumnName") in your Selenium code
     }
 }
