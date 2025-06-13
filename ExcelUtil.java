@@ -94,15 +94,20 @@ public class ExcelUtil {
     return assignment;
 }
 
+
 private static String getCellValue(Cell cell) {
     if (cell == null) return "";
     return switch (cell.getCellType()) {
         case STRING -> cell.getStringCellValue();
-        case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
+        case NUMERIC -> DateUtil.isCellDateFormatted(cell) ?
+            cell.getDateCellValue().toString() :
+            String.valueOf((long) cell.getNumericCellValue());
         case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
         default -> "";
     };
 }
+
+    
 
     public static Map<String, List<Map<String, String>>> getAssignedRowData(List<String> userIds) throws IOException {
     Map<String, List<Map<String, String>>> userToRows = new HashMap<>();
